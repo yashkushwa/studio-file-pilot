@@ -1,9 +1,10 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { FileItem, SortOption, ViewMode } from '@/types/fileTypes';
 import { getFileExtension, sortFiles } from '@/utils/fileUtils';
 
-// Mock data for frontend development - will be replaced with actual API calls
+// Updated base path for mock data
 const MOCK_BASE_PATH = '/app/luna';
 
 const generateMockFiles = (path: string): FileItem[] => {
