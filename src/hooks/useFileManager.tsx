@@ -1,6 +1,4 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
 import { FileItem, SortOption, ViewMode } from '@/types/fileTypes';
 import { getFileExtension, sortFiles } from '@/utils/fileUtils';
 import { toast } from 'sonner';
@@ -8,30 +6,21 @@ import { toast } from 'sonner';
 // Base path for our file manager
 const BASE_PATH = '/app/luna';
 
-// Initialize with a real "luna" folder instead of mock data
+// Initialize with a real "luna" folder
 const initializeFileSystem = () => {
-  // Normally we would make an API call to create the folder on the server
-  // For this demo, we'll simulate having a "luna" folder with some initial content
+  // Create the luna folder if it doesn't exist
+  const fileSystem = JSON.parse(localStorage.getItem('fileSystem') || '{}');
   
-  // Create base structure for the luna folder
-  const lunaFolder: FileItem = {
-    id: 'folder-luna',
-    name: 'luna',
-    type: 'folder',
-    modified: new Date().toISOString(),
-    path: BASE_PATH,
-  };
-  
-  // Store in localStorage to persist between page refreshes
-  const existingFileSystem = localStorage.getItem('fileSystem');
-  if (!existingFileSystem) {
-    const fileSystem = {
-      [BASE_PATH]: [] // Empty luna folder initially
-    };
+  if (!fileSystem[BASE_PATH]) {
+    // Initialize the luna folder
+    fileSystem[BASE_PATH] = [];
     localStorage.setItem('fileSystem', JSON.stringify(fileSystem));
+    
+    // Show success message
+    toast.success('Luna folder created successfully');
   }
   
-  return lunaFolder;
+  return fileSystem[BASE_PATH];
 };
 
 // Get files from our simulated file system
@@ -65,12 +54,19 @@ export const useFileManager = (initialPath = BASE_PATH) => {
   const [sortBy, setSortBy] = useState<SortOption>('name');
   const [sortAscending, setSortAscending] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  
-  // Initialize file system
+
+  // Initialize file system and fetch initial files
   useEffect(() => {
-    initializeFileSystem();
-  }, []);
-  
+    try {
+      initializeFileSystem();
+      fetchFiles(initialPath);
+    } catch (err) {
+      console.error('Error initializing file system:', err);
+      setError('Failed to initialize file system');
+      toast.error('Failed to initialize file system');
+    }
+  }, [initialPath]);
+
   // Function to fetch files from the given path
   const fetchFiles = useCallback(async (path: string) => {
     setLoading(true);
@@ -95,18 +91,18 @@ export const useFileManager = (initialPath = BASE_PATH) => {
       setLoading(false);
     }
   }, [sortBy, sortAscending]);
-  
+
   // Initial fetch
   useEffect(() => {
     fetchFiles(initialPath);
   }, [initialPath, fetchFiles]);
-  
+
   // Handle changing directories
   const navigateToFolder = useCallback((path: string) => {
     setSelectedFiles([]);
     fetchFiles(path);
   }, [fetchFiles]);
-  
+
   // Handle file selection
   const toggleFileSelection = useCallback((fileId: string) => {
     setSelectedFiles(prev => {
@@ -117,12 +113,12 @@ export const useFileManager = (initialPath = BASE_PATH) => {
       }
     });
   }, []);
-  
+
   // Clear all selections
   const clearSelection = useCallback(() => {
     setSelectedFiles([]);
   }, []);
-  
+
   // Handle sorting
   const handleSort = useCallback((sortOption: SortOption) => {
     if (sortOption === sortBy) {
@@ -138,12 +134,12 @@ export const useFileManager = (initialPath = BASE_PATH) => {
     setFiles(prevFiles => sortFiles(prevFiles, sortOption, 
       sortOption === sortBy ? !sortAscending : true));
   }, [sortBy, sortAscending]);
-  
+
   // Toggle view mode
   const toggleViewMode = useCallback(() => {
     setViewMode(prev => prev === 'list' ? 'grid' : 'list');
   }, []);
-  
+
   // Function to upload files
   const uploadFiles = useCallback(async (fileList: FileList) => {
     setLoading(true);
@@ -179,7 +175,7 @@ export const useFileManager = (initialPath = BASE_PATH) => {
       setLoading(false);
     }
   }, [currentPath, fetchFiles]);
-  
+
   // Function for file/folder deletion
   const deleteItems = useCallback(async () => {
     if (selectedFiles.length === 0) return;
@@ -209,7 +205,7 @@ export const useFileManager = (initialPath = BASE_PATH) => {
       setLoading(false);
     }
   }, [selectedFiles, currentPath, fetchFiles]);
-  
+
   // Function to create a new folder
   const createFolder = useCallback(async (folderName: string) => {
     setLoading(true);
