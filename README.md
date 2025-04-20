@@ -1,73 +1,51 @@
-# Welcome to your Lovable project
 
-## Project info
+# Studio File Pilot
 
-**URL**: https://lovable.dev/projects/6595faad-1c18-4d2e-b64d-6c2469af34cc
+An advanced file management application with modern UI/UX.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- 📂 File and folder navigation
+- 📤 File upload functionality
+- 📥 File download capability
+- 🗃️ File organization and sorting
+- 🔍 List and grid views
+- 🗑️ Delete operations
+- 📁 Create new folders
 
-**Use Lovable**
+## Running the Application
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6595faad-1c18-4d2e-b64d-6c2469af34cc) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+The application is built to run on port 8080 by default.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Install dependencies
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at http://localhost:8080
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Project Structure
 
-**Use GitHub Codespaces**
+- `src/components/FileManager/`: UI components for the file manager
+- `src/hooks/useFileManager.tsx`: Core file management logic
+- `src/types/`: TypeScript definitions
+- `src/utils/`: Utility functions
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Deployment
 
-## What technologies are used for this project?
+This application is designed to be easy to deploy. You can use services like Vercel, Netlify, or traditional hosting:
 
-This project is built with:
+```sh
+# Build for production
+npm run build
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Preview the production build locally
+npm run preview
+```
 
-## How can I deploy this project?
+## Base Directory Configuration
 
-Simply open [Lovable](https://lovable.dev/projects/6595faad-1c18-4d2e-b64d-6c2469af34cc) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+The file manager is configured to use `/teamspace/studios/this_studio` as the base directory.

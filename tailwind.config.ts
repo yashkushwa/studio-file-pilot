@@ -52,6 +52,16 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+                // File manager specific colors
+                'file-blue': '#0EA5E9',
+                'file-amber': '#F59E0B',
+                'file-gray': '#6B7280',
+                'folder-yellow': '#F59E0B',
+                'file-document': '#8B5CF6',
+                'file-image': '#10B981',
+                'file-video': '#EF4444',
+                'file-audio': '#3B82F6',
+                'file-archive': '#6366F1',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
