@@ -15,7 +15,7 @@ interface FileManagerProps {
 }
 
 const FileManager: React.FC<FileManagerProps> = ({ 
-  basePath = '/app/luna'  // Updated default base path
+  basePath = '/app/luna'
 }) => {
   const {
     files,

@@ -3,52 +3,60 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { FileItem, SortOption, ViewMode } from '@/types/fileTypes';
 import { getFileExtension, sortFiles } from '@/utils/fileUtils';
+import { toast } from 'sonner';
 
-// Updated base path for mock data
-const MOCK_BASE_PATH = '/app/luna';
+// Base path for our file manager
+const BASE_PATH = '/app/luna';
 
-const generateMockFiles = (path: string): FileItem[] => {
-  // Extract the last part of the path for folder name
-  const parts = path.split('/').filter(Boolean);
-  const currentFolder = parts.length ? parts[parts.length - 1] : 'this_studio';
+// Initialize with a real "luna" folder instead of mock data
+const initializeFileSystem = () => {
+  // Normally we would make an API call to create the folder on the server
+  // For this demo, we'll simulate having a "luna" folder with some initial content
   
-  const mockFiles: FileItem[] = [];
+  // Create base structure for the luna folder
+  const lunaFolder: FileItem = {
+    id: 'folder-luna',
+    name: 'luna',
+    type: 'folder',
+    modified: new Date().toISOString(),
+    path: BASE_PATH,
+  };
   
-  // Add some folders
-  const folderCount = Math.floor(Math.random() * 5) + 2; // 2-6 folders
-  for (let i = 0; i < folderCount; i++) {
-    mockFiles.push({
-      id: `folder-${i}-${Date.now()}`,
-      name: `Folder ${i + 1}`,
-      type: 'folder',
-      modified: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
-      path: `${path}/${currentFolder}_${i + 1}`,
-    });
+  // Store in localStorage to persist between page refreshes
+  const existingFileSystem = localStorage.getItem('fileSystem');
+  if (!existingFileSystem) {
+    const fileSystem = {
+      [BASE_PATH]: [] // Empty luna folder initially
+    };
+    localStorage.setItem('fileSystem', JSON.stringify(fileSystem));
   }
   
-  // Add some files with different extensions
-  const extensions = ['pdf', 'docx', 'jpg', 'png', 'txt', 'mp4', 'zip'];
-  const fileCount = Math.floor(Math.random() * 10) + 5; // 5-14 files
-  
-  for (let i = 0; i < fileCount; i++) {
-    const extension = extensions[Math.floor(Math.random() * extensions.length)];
-    const size = Math.floor(Math.random() * 10000000); // Random size up to ~10MB
-    
-    mockFiles.push({
-      id: `file-${i}-${Date.now()}`,
-      name: `File ${i + 1}.${extension}`,
-      type: 'file',
-      size: size,
-      modified: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
-      path: `${path}/File ${i + 1}.${extension}`,
-      extension: extension,
-    });
-  }
-  
-  return mockFiles;
+  return lunaFolder;
 };
 
-export const useFileManager = (initialPath = MOCK_BASE_PATH) => {
+// Get files from our simulated file system
+const getFilesFromPath = (path: string): FileItem[] => {
+  try {
+    const fileSystem = JSON.parse(localStorage.getItem('fileSystem') || '{}');
+    return fileSystem[path] || [];
+  } catch (err) {
+    console.error('Error loading files:', err);
+    return [];
+  }
+};
+
+// Save files to our simulated file system
+const saveFilesToPath = (path: string, files: FileItem[]) => {
+  try {
+    const fileSystem = JSON.parse(localStorage.getItem('fileSystem') || '{}');
+    fileSystem[path] = files;
+    localStorage.setItem('fileSystem', JSON.stringify(fileSystem));
+  } catch (err) {
+    console.error('Error saving files:', err);
+  }
+};
+
+export const useFileManager = (initialPath = BASE_PATH) => {
   const [currentPath, setCurrentPath] = useState<string>(initialPath);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
@@ -58,19 +66,22 @@ export const useFileManager = (initialPath = MOCK_BASE_PATH) => {
   const [sortAscending, setSortAscending] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   
+  // Initialize file system
+  useEffect(() => {
+    initializeFileSystem();
+  }, []);
+  
   // Function to fetch files from the given path
   const fetchFiles = useCallback(async (path: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      // In a real implementation, this would be an API call
-      // const response = await axios.get(`/api/files?path=${encodeURIComponent(path)}`);
-      // const data = response.data;
+      // Get files from our simulated file system
+      const filesFromPath = getFilesFromPath(path);
       
-      // For now, we'll use mock data
-      const mockData = generateMockFiles(path);
-      const processedFiles = mockData.map(file => ({
+      // Process files to ensure they have all required properties
+      const processedFiles = filesFromPath.map(file => ({
         ...file,
         extension: file.type === 'file' ? getFileExtension(file.name) : undefined
       }));
@@ -133,27 +144,43 @@ export const useFileManager = (initialPath = MOCK_BASE_PATH) => {
     setViewMode(prev => prev === 'list' ? 'grid' : 'list');
   }, []);
   
-  // Function to simulate file upload
-  const uploadFiles = useCallback(async (files: FileList) => {
+  // Function to upload files
+  const uploadFiles = useCallback(async (fileList: FileList) => {
     setLoading(true);
     setError(null);
     
     try {
-      // In a real implementation, this would upload files to the server
-      // const formData = new FormData();
-      // Array.from(files).forEach(file => formData.append('files', file));
-      // await axios.post(`/api/upload?path=${encodeURIComponent(currentPath)}`, formData);
+      // Convert FileList to an array of files
+      const newFiles: FileItem[] = Array.from(fileList).map(file => ({
+        id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: file.name,
+        type: 'file',
+        size: file.size,
+        modified: new Date().toISOString(),
+        path: `${currentPath}/${file.name}`,
+        extension: getFileExtension(file.name)
+      }));
       
-      // For now, we'll simulate a delay and then refresh the file list
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get current files and add new ones
+      const currentFiles = getFilesFromPath(currentPath);
+      const updatedFiles = [...currentFiles, ...newFiles];
+      
+      // Save to our simulated file system
+      saveFilesToPath(currentPath, updatedFiles);
+      
+      // Refresh the file list
+      toast.success('Files uploaded successfully');
       fetchFiles(currentPath);
     } catch (err) {
       console.error('Failed to upload files:', err);
       setError('Failed to upload files. Please try again.');
+      toast.error('Failed to upload files');
+    } finally {
+      setLoading(false);
     }
   }, [currentPath, fetchFiles]);
   
-  // Function to simulate file/folder deletion
+  // Function for file/folder deletion
   const deleteItems = useCallback(async () => {
     if (selectedFiles.length === 0) return;
     
@@ -161,34 +188,70 @@ export const useFileManager = (initialPath = MOCK_BASE_PATH) => {
     setError(null);
     
     try {
-      // In a real implementation, this would delete items on the server
-      // await axios.delete('/api/files', { data: { ids: selectedFiles } });
+      // Get current files
+      const currentFiles = getFilesFromPath(currentPath);
       
-      // For now, we'll simulate a delay and then refresh the file list
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Filter out selected files
+      const remainingFiles = currentFiles.filter(file => !selectedFiles.includes(file.id));
+      
+      // Save updated file list
+      saveFilesToPath(currentPath, remainingFiles);
+      
+      // Clear selection and refresh files
       setSelectedFiles([]);
+      toast.success(`${selectedFiles.length} item(s) deleted`);
       fetchFiles(currentPath);
     } catch (err) {
       console.error('Failed to delete items:', err);
       setError('Failed to delete selected items. Please try again.');
+      toast.error('Failed to delete items');
+    } finally {
+      setLoading(false);
     }
   }, [selectedFiles, currentPath, fetchFiles]);
   
-  // Function to simulate creating a new folder
+  // Function to create a new folder
   const createFolder = useCallback(async (folderName: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      // In a real implementation, this would create a folder on the server
-      // await axios.post('/api/folders', { path: currentPath, name: folderName });
+      // Create new folder object
+      const newFolder: FileItem = {
+        id: `folder-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: folderName,
+        type: 'folder',
+        modified: new Date().toISOString(),
+        path: `${currentPath}/${folderName}`,
+      };
       
-      // For now, we'll simulate a delay and then refresh the file list
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get current files and add new folder
+      const currentFiles = getFilesFromPath(currentPath);
+      
+      // Check if folder with same name exists
+      if (currentFiles.some(file => file.name === folderName && file.type === 'folder')) {
+        setError('A folder with this name already exists.');
+        toast.error('A folder with this name already exists');
+        return;
+      }
+      
+      const updatedFiles = [...currentFiles, newFolder];
+      
+      // Save to our simulated file system
+      saveFilesToPath(currentPath, updatedFiles);
+      
+      // Also create an empty array for the new folder's path
+      saveFilesToPath(newFolder.path, []);
+      
+      // Refresh the file list
+      toast.success(`Folder "${folderName}" created successfully`);
       fetchFiles(currentPath);
     } catch (err) {
       console.error('Failed to create folder:', err);
       setError('Failed to create folder. Please try again.');
+      toast.error('Failed to create folder');
+    } finally {
+      setLoading(false);
     }
   }, [currentPath, fetchFiles]);
 
