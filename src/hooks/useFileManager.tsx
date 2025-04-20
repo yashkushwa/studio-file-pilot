@@ -1,11 +1,11 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { FileItem, SortOption, ViewMode } from '@/types/fileTypes';
 import { getFileExtension, sortFiles } from '@/utils/fileUtils';
 
 // Mock data for frontend development - will be replaced with actual API calls
-const MOCK_BASE_PATH = '/teamspace/studios/this_studio';
+const MOCK_BASE_PATH = '/app/luna';
+
 const generateMockFiles = (path: string): FileItem[] => {
   // Extract the last part of the path for folder name
   const parts = path.split('/').filter(Boolean);

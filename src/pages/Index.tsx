@@ -12,7 +12,7 @@ const Index = () => {
       
       <main className="flex-1 p-4">
         <div className="max-w-7xl mx-auto h-[calc(100vh-8rem)]">
-          <FileManager basePath="/teamspace/studios/this_studio" />
+          <FileManager basePath="/app/luna" />
         </div>
       </main>
       
